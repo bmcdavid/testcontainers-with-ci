@@ -7,7 +7,7 @@ using Xunit;
 
 namespace MyApp.Tests;
 
-// CI is host-gateway, local is host.docker.internal
+// t
 // docker build --target build --progress plain -t myapp-build:ci .                                                   
 // docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -e RYUK_DISABLED=true -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal myapp-build:ci dotnet test --no-restore
 
