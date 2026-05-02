@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # BuildKit is needed for --mount in RUN steps
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Run tests inside Docker — Testcontainers pulls postgres:16-alpine and
+      # talks to the host daemon via the mounted socket.
+      - name: Build and test
+        run: |
+          docker build \
+            --target test \
+            --progress=plain \
+            .
+
+      # Only build the final image if tests passed
+      - name: Build final image
+        run: |
+          docker build \
+            --target final \
+            -t myapp:${{ github.sha }} \
+            -t myapp:latest \
+            .
+
+      # Optional: push to a registry
+      # - name: Push image
+      #   run: |
+      #     echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      #     docker tag myapp:latest ghcr.io/${{ github.repository }}:latest
+      #     docker push ghcr.io/${{ github.repository }}:latest

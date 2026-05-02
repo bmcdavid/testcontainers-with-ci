@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        run: |
+          docker build \
+            --target build \
+            --progress=plain \
+            -t myapp-build:ci \
+            .
+
+      - name: Test
+        run: |
+          docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -e RYUK_DISABLED=true \
+          -e TESTCONTAINERS_HOST_OVERRIDE=host-gateway \
+          myapp-build:ci \
+          dotnet test --no-restore -logger "console;verbosity=information"
+
+      # Only build the final image if tests passed
+      - name: Build final image
+        run: |
+          docker build \
+            --target final \
+            -t myapp:${{ github.sha }} \
+            -t myapp:latest \
+            .
+
+      # Optional: push to a registry
+      # - name: Push image
+      #   run: |
+      #     echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      #     docker tag myapp:latest ghcr.io/${{ github.repository }}:latest
+      #     docker push ghcr.io/${{ github.repository }}:latest
