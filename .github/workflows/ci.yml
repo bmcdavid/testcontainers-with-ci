@@ -23,6 +23,8 @@ jobs:
             -t myapp-build:ci \
             .
 
+      # locally replace --network host with
+      # -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
       - name: Test
         run: |
           docker run --rm \
